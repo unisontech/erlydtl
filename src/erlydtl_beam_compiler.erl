@@ -192,13 +192,15 @@ compile_multiple_to_binary(Dir, ParserResults, Context) ->
     end.
 
 compile_to_binary(DjangoParseTree, CheckSum, Context) ->
+    TransLocales = Context#dtl_context.trans_locales,
     try body_ast(DjangoParseTree, init_treewalker(Context)) of
         {{BodyAst, BodyInfo}, BodyTreeWalker} ->
             try custom_tags_ast(BodyInfo#ast_info.custom_tags, BodyTreeWalker) of
                 {CustomTags,
                  #treewalker{
                     context=#dtl_context{
-                               errors=#error_info{ list=Errors }
+                               errors=#error_info{ list=Errors },
+                               trans_locales = TransLocales
                               } }=CustomTagsTreeWalker}
                   when length(Errors) == 0 ->
                     Forms = forms(
@@ -470,6 +472,7 @@ forms({BodyAst, BodyInfo}, {CustomTagsFunctionAst, CustomTagsInfo}, CheckSum,
     Dependencies = MergedInfo#ast_info.dependencies,
     TranslatableStrings = MergedInfo#ast_info.translatable_strings,
     TranslatedBlocks = MergedInfo#ast_info.translated_blocks,
+    TransLocales = Context#dtl_context.trans_locales,
     Variables = lists:usort(MergedInfo#ast_info.var_names),
     DefaultVariables = lists:usort(MergedInfo#ast_info.def_names),
     Constants = lists:usort(MergedInfo#ast_info.const_names),
@@ -479,7 +482,7 @@ forms({BodyAst, BodyInfo}, {CustomTagsFunctionAst, CustomTagsInfo}, CheckSum,
       ?Q(["-module('@Module@').",
           "-export([render/0, render/1, render/2, source/0, dependencies/0,",
           "         translatable_strings/0, translated_blocks/0, variables/0,",
-          "         default_variables/0, constants/0]).",
+          "         default_variables/0, constants/0, trans_locales/0]).",
           "source() -> {_@File@, _@CheckSum@}.",
           "dependencies() -> _@Dependencies@.",
           "variables() -> _@Variables@.",
@@ -487,6 +490,7 @@ forms({BodyAst, BodyInfo}, {CustomTagsFunctionAst, CustomTagsInfo}, CheckSum,
           "constants() -> _@Constants@.",
           "translatable_strings() -> _@TranslatableStrings@.",
           "translated_blocks() -> _@TranslatedBlocks@.",
+          "trans_locales() -> _@TransLocales@.",
           "'@_CustomTagsFunctionAst'() -> _.",
           "render() -> render([], []).",
           "render(Variables) -> render(Variables, []).",
