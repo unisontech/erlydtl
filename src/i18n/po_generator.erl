@@ -18,10 +18,10 @@
 generate_file(Lang,Items, Fuzzy) ->
     Gettext_App_Name = "tmp",
     GtxtDir = ".",
-    io:format("Opening po file"),
+    io:format("Opening po file~n"),
     gettext_compile:open_po_file(Gettext_App_Name, GtxtDir, Lang),
 
-    gettext_compile:write_header(),
+    gettext_compile:write_header(Lang),
     io:format("Writing entries~n"),
     write_entries(Items),
     io:format("Writing fuzzy entries~n"),

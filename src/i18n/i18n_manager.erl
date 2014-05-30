@@ -24,6 +24,7 @@ generate_pos([Lang,Files])->
     ProcessedFiles = sources_parser:parse(SplittedFiles),
     io:format("Parsed tokens are ~p~n",[ProcessedFiles]),
     BaseDir = "lang/default/",
+    filelib:ensure_dir(BaseDir), 
 
     PopulateTable = fun(Language) ->
                             io:format("-------------------------Generating po file for ~s-------------------------~n",[Language]),
@@ -32,7 +33,7 @@ generate_pos([Lang,Files])->
                             insert_tokens(ProcessedFiles),
 
                             %%Recover already present translations
-                            TranslationsForLanguage = po_scanner:scan(BaseDir ++ Language ++ "/gettext.po"),
+                            TranslationsForLanguage = po_scanner:scan(BaseDir ++ "/" ++ Language ++ ".po"),
                             io:format("Updating translations~n"),
                             insert_translations(TranslationsForLanguage),
                             Data = dets_data(),
@@ -56,7 +57,8 @@ generate_pos([Lang,Files])->
 open_table(Locale)->
     Dir = "./lang/tmp/" ++ Locale,
     io:format("Creating dir ~s~n",[Dir]),
-    ok = file:del_dir(Dir),
+    filelib:ensure_dir(Dir), 
+    file:del_dir(Dir),
     ok = file:make_dir(Dir),
     OpenTable = fun({TableName, TableFile}, ok) ->
                         File = Dir ++ TableFile,
@@ -99,7 +101,7 @@ insert_translations(L = [H|T]) ->
             insert_translations(T);
         _Other ->
             [{id,Id}, {str,Str}|Tail] = L,
-            ok = insert_translation(Id,Str),
+            insert_translation(Id,Str),
             insert_translations(Tail)
     end.
 
